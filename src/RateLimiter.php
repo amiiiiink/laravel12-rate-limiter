@@ -359,7 +359,7 @@ class RateLimiter
         if (! $this->redisClient) {
             $redisConfig = Arr::get($this->config, 'redis', []);
             $this->redisClient = new Redis;
-            $this->redisClient->connect($redisConfig['host'] ?? '127.0.0.1', $redisConfig['port'] ?? 6379);
+            $this->redisClient->connect($redisConfig['host'] ?? '127.0.0.1', (int)$redisConfig['port'] ?? 6379);
             $this->redisClient->select((int) ($redisConfig['database'] ?? 0));
             $this->redisClient->setOption(Redis::OPT_PREFIX, ($redisConfig['prefix'] ?? 'rate-limiter').':');
         }

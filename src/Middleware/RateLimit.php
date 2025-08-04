@@ -42,16 +42,10 @@ final class RateLimit
         // Check if the IP is blocked
         RateLimiter::create($request)->checkIpAddress();
 
-        // Apply rate limits from config
 
-        try {
-            $limiter = RateLimiter::create($request)->withClientIpAddress();
-            $this->applyRateLimits($limiter);
-            $this->logRateLimit($request, 1, 'normal'); // ✅ لاگ موفق
-        } catch (RateLimitException $e) {
-            $this->logRateLimit($request, 1, 'blocked'); // ✅ لاگ زمانی که رد شده
-            throw $e;
-        }
+        // Apply rate limits from config
+        $limiter = RateLimiter::create($request)->withClientIpAddress();
+        $this->applyRateLimits($limiter);
 
         return $next($request);
     }
