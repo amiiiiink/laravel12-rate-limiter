@@ -1,0 +1,114 @@
+<?php
+
+declare(strict_types=1);
+
+namespace amiiiiink\RateLimiter\Middleware;
+
+use amiiiiink\RateLimiter\Exceptions\RateLimitException;
+use amiiiiink\RateLimiter\Facades\RateLimiter;
+use amiiiiink\RateLimiter\RateLimiter as RateLimiterService;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Models\RateLimitLog;
+
+/**
+ * Middleware to enforce rate limits on incoming requests.
+ *
+ * Applies rate limiting based on configured hourly, minute, and second thresholds,
+ * exempting internal IPs (starting with "10.0."). Uses the RateLimiter facade to
+ * track and enforce limits.
+ */
+final class RateLimit
+{
+    /**
+     * Handle an incoming request and apply rate limiting.
+     *
+     * @param  Request  $request  The incoming HTTP request
+     * @param  Closure  $next  The next middleware in the stack
+     * @return mixed The response after applying rate limits
+     *
+     * @throws RateLimitException
+     */
+    public function handle(Request $request, Closure $next): mixed
+    {
+        $clientIp = $request->getClientIp();
+
+        // Exempt internal IPs starting with "10.0."
+        if ($clientIp !== null && Str::startsWith($clientIp, '10.0.')) {
+            return $next($request);
+        }
+
+        // Check if the IP is blocked
+        RateLimiter::create($request)->checkIpAddress();
+
+        // Apply rate limits from config
+
+        try {
+            $limiter = RateLimiter::create($request)->withClientIpAddress();
+            $this->applyRateLimits($limiter);
+            $this->logRateLimit($request, 1, 'normal'); // ✅ لاگ موفق
+        } catch (RateLimitException $e) {
+            $this->logRateLimit($request, 1, 'blocked'); // ✅ لاگ زمانی که رد شده
+            throw $e;
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * Apply configured rate limits to the RateLimiter instance.
+     *
+     * @param  RateLimiterService  $limiter  The configured RateLimiter instance
+     *
+     * @throws RateLimitException
+     */
+    private function applyRateLimits(RateLimiterService $limiter): void
+    {
+        $limits = [
+            'hourly' => ['limit' => config('rate-limiter.limits.hourly', 0), 'interval' => 3600],
+            'minute' => ['limit' => config('rate-limiter.limits.minute', 0), 'interval' => 60],
+            'second' => ['limit' => config('rate-limiter.limits.second', 0), 'interval' => 1],
+        ];
+
+        foreach ($limits as $name => $settings) {
+            if ($settings['limit'] > 0) {
+                $limiter->withName("requests:$name")
+                    ->withTimeInterval($settings['interval']);
+
+                $requestCount = $limiter->count();  // قبل از limit
+
+                $status = $this->determineStatus($requestCount, $settings['limit']);
+
+                $this->logRateLimit(request(), $requestCount, $status); // لاگ قبل از limit
+
+                $limiter->limit($settings['limit']); // ممکنه throw کنه
+            }
+        }
+
+    }
+
+
+    protected function logRateLimit(Request $request, int $requestCount, string $status)
+    {
+        RateLimitLog::create([
+            'ip' => $request->ip(),
+            'endpoint' => $request->path(),
+            'requests' => $requestCount,
+            'status' => $status,
+        ]);
+    }
+
+    private function determineStatus(int $count, int $limit): string
+    {
+        if ($count >= $limit) {
+            return 'blocked';
+        } elseif ($count >= ($limit * 0.8)) {
+            return 'warning';
+        }
+
+        return 'normal';
+    }
+
+
+}

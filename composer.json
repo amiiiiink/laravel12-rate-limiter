@@ -1,0 +1,78 @@
+{
+    "name": "amiiiiink/laravel-rate-limiter",
+    "description": "A flexible rate limiting middleware for Laravel and Lumen applications",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/amiiiiink/laravel-rate-limiter",
+    "keywords": [
+        "laravel",
+        "lumen",
+        "rate-limiter",
+        "rate-limiting",
+        "middleware",
+        "throttle",
+        "redis"
+    ],
+    "authors": [
+        {
+            "name": "Amin Karimi",
+            "email": "karimi66.amin@gmail.com",
+            "homepage": "https://github.com/amiiiiink",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "ext-json": "*",
+        "ext-redis": "*",
+        "illuminate/support": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/http": "^10.0 || ^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.21",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^8.0 || ^9.0 || ^10.0",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.0 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "amiiiiink\\RateLimiter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "amiiiiink\\RateLimiter\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "amiiiiink\\RateLimiter\\RateLimiterServiceProvider"
+            ],
+            "aliases": {
+                "RateLimiter": "amiiiiink\\RateLimiter\\Facades\\RateLimiter"
+            }
+        }
+    },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "test-ci": "phpunit --colors=always --coverage-text --coverage-clover coverage.xml --log-junit junit.xml",
+        "check": "vendor/bin/pint --test",
+        "analyze": "phpstan analyse src --level=6 --memory-limit=-1"
+    },
+    "support": {
+        "issues": "https://github.com/amiiiiink/laravel-rate-limiter/issues",
+        "source": "https://github.com/amiiiiink/laravel-rate-limiter"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
