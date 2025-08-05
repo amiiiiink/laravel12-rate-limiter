@@ -31,26 +31,11 @@ composer require amiiiiink/laravel-rate-limiter
 
 The service provider (`RateLimiterServiceProvider`) is automatically registered via Laravel’s package discovery. If auto-discovery is disabled, add it to `config/app.php`:
 
-```php
-'providers' => [
-    // ...
-    amiiiiink\RateLimiter\Laravel\RateLimiterServiceProvider::class,
-],
-```
-
-Optionally, register the facade for cleaner syntax:
-
-```php
-'aliases' => [
-    // ...
-    'RateLimiter' => \amiiiiink\RateLimiter\Facades\RateLimiter::class,
-],
-```
 
 Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --provider="amiiiiink\RateLimiter\Laravel\RateLimiterServiceProvider" --tag="config"
+php artisan vendor:publish --tag=config
 ```
 
 This copies `rate-limiter.php` to your `config/` directory.
